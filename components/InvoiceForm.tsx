@@ -1,0 +1,597 @@
+import React, { useState, useRef } from 'react';
+import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail } from 'lucide-react';
+import { InvoiceData, LineItem } from '../types';
+import { CURRENCIES, PAYMENT_METHODS, DEFAULT_WEBHOOK_URL } from '../constants';
+import { sendInvoiceToWebhook } from '../services/invoiceService';
+
+const getInitialFormData = (): InvoiceData => ({
+  companyName: '',
+  companyAddress: '',
+  companyEmail: '',
+  companyPhone: '',
+  logoUrl: '',
+  clientName: '',
+  clientAddress: '',
+  clientEmail: '',
+  clientPhone: '',
+  invoiceNumber: `INV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+  invoiceDate: new Date().toISOString().split('T')[0],
+  dueDate: '',
+  currency: 'EUR',
+  paymentMethod: 'Virement Bancaire',
+  items: [
+    { id: Date.now().toString(), name: 'Service de consultation', quantity: 1, unitPrice: 0 }
+  ]
+});
+
+const InvoiceForm: React.FC = () => {
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [successAction, setSuccessAction] = useState<'pdf' | 'email' | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  const [formData, setFormData] = useState<InvoiceData>(getInitialFormData());
+  
+  // Reference pour la zone à imprimer en PDF
+  const invoiceRef = useRef<HTMLDivElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleItemChange = (id: string, field: keyof LineItem, value: string | number) => {
+    const newItems = formData.items.map(item => {
+      if (item.id === id) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    });
+    setFormData(prev => ({ ...prev, items: newItems }));
+  };
+
+  const addItem = () => {
+    const newItem: LineItem = {
+      id: Date.now().toString(),
+      name: '',
+      quantity: 1,
+      unitPrice: 0
+    };
+    setFormData(prev => ({ ...prev, items: [...prev.items, newItem] }));
+  };
+
+  const removeItem = (id: string) => {
+    if (formData.items.length === 1) return;
+    setFormData(prev => ({ ...prev, items: prev.items.filter(item => item.id !== id) }));
+  };
+
+  const calculateTotal = () => {
+    return formData.items.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  };
+
+  // Triggered by the "Prévisualiser" button
+  const handlePreviewSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPreviewMode(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Action: Générer PDF (Impression native)
+  const handleGeneratePdf = () => {
+    if (invoiceRef.current) {
+      const invoiceHtml = invoiceRef.current.innerHTML;
+      
+      // Création d'une fenêtre popup pour l'impression
+      const printWindow = window.open('', '_blank', 'width=900,height=800');
+      
+      if (printWindow) {
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Facture-${formData.invoiceNumber}</title>
+              <script src="https://cdn.tailwindcss.com"></script>
+              <script>
+                tailwind.config = {
+                  theme: {
+                    extend: {
+                      fontFamily: { sans: ['Inter', 'sans-serif'] },
+                      colors: {
+                        primary: {
+                          50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 800: '#1e40af', 900: '#1e3a8a', 950: '#172554',
+                        }
+                      }
+                    }
+                  }
+                }
+              </script>
+              <style>
+                body {
+                  background-color: white;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+                @media print {
+                  @page { margin: 0; size: auto; }
+                  body { margin: 0; }
+                }
+                /* Ajustements spécifiques pour l'impression */
+                .invoice-container {
+                  padding: 40px !important;
+                  max-width: 100% !important;
+                  width: 100% !important;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="invoice-container">
+                ${invoiceHtml}
+              </div>
+              <script>
+                // Attendre que Tailwind et les images soient chargés avant d'imprimer
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.print();
+                    // window.close(); // Optionnel: fermer après impression (peut bloquer sur mobile)
+                  }, 800);
+                };
+              </script>
+            </body>
+          </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.focus();
+
+        setSuccessAction('pdf');
+        setSuccess(true);
+      } else {
+        alert("Veuillez autoriser les pop-ups pour générer le PDF.");
+      }
+    }
+  };
+
+  // Action: Envoyer Email (Webhook)
+  const handleSendEmail = async () => {
+    setLoading(true);
+    try {
+      await sendInvoiceToWebhook(formData, DEFAULT_WEBHOOK_URL);
+      setSuccessAction('email');
+      setSuccess(true);
+      
+      // Réinitialiser le formulaire après succès de l'envoi
+      setFormData(getInitialFormData());
+      setIsPreviewMode(false);
+      setTimeout(() => {
+        setSuccess(false);
+        setSuccessAction(null);
+      }, 5000);
+    } catch (error) {
+      console.error("Erreur lors de l'envoi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsPreviewMode(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const inputClass = "block w-full rounded-md border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2.5 px-3 bg-white border";
+  const labelClass = "block text-sm font-medium text-slate-700 mb-1";
+  const sectionTitleClass = "text-lg font-semibold text-primary-900 border-b border-slate-200 pb-2 mb-6";
+  const currencySymbol = CURRENCIES.find(c => c.code === formData.currency)?.symbol || '';
+
+  if (success) {
+    return (
+      <div className="max-w-3xl mx-auto mt-12 p-8 bg-white rounded-2xl shadow-xl text-center border border-green-100 animate-fade-in">
+        <div className="flex justify-center mb-6">
+          <div className="bg-green-100 p-4 rounded-full">
+            <CheckCircle2 size={48} className="text-green-600" />
+          </div>
+        </div>
+        <h2 className="text-3xl font-bold text-slate-800 mb-4">
+          {successAction === 'email' ? 'Facture envoyée !' : 'Facture générée !'}
+        </h2>
+        <p className="text-slate-600 mb-8 text-lg">
+          {successAction === 'email' 
+            ? "Les données ont été transmises avec succès au système d'envoi d'email."
+            : "La fenêtre d'impression s'est ouverte. Sélectionnez 'Enregistrer au format PDF' pour sauvegarder votre document."}
+        </p>
+        <button 
+          onClick={() => {
+            setSuccess(false);
+            setSuccessAction(null);
+            if (successAction === 'pdf') {
+              // Si c'était juste un PDF, on reste peut-être sur l'aperçu, ou on reset. 
+              // Ici on laisse l'utilisateur revenir manuellement ou on reset si c'était un envoi email.
+            }
+          }}
+          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 hover:bg-primary-800 transition-colors"
+        >
+          {successAction === 'email' ? 'Créer une nouvelle facture' : 'Retour'}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      
+      {/* Header Section */}
+      <div className="mb-8 md:flex md:items-center md:justify-between">
+        <div>
+          <h2 className="text-3xl font-bold leading-tight text-primary-950">
+            {isPreviewMode ? 'Aperçu du document' : 'Nouvelle Facture'}
+          </h2>
+          {!isPreviewMode && (
+            <p className="mt-2 text-sm text-slate-500">Remplissez les informations ci-dessous pour générer votre document.</p>
+          )}
+          {isPreviewMode && (
+             <p className="mt-2 text-sm text-slate-500">Vérifiez les informations avant la génération définitive.</p>
+          )}
+        </div>
+      </div>
+
+      {/* VIEW: PREVIEW MODE */}
+      {isPreviewMode ? (
+        <div className="animate-fade-in">
+          {/* Invoice Paper Representation */}
+          <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
+            {/* Ce div avec la ref sera cloné. Il doit contenir tout le style nécessaire. */}
+            <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
+              
+              {/* Invoice Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start mb-12 border-b border-slate-100 pb-8">
+                <div className="mb-6 md:mb-0">
+                  {formData.logoUrl ? (
+                    <img src={formData.logoUrl} alt="Logo Entreprise" className="h-16 w-auto object-contain mb-4" />
+                  ) : (
+                    <div className="h-16 w-16 bg-slate-100 rounded flex items-center justify-center mb-4 text-slate-400">
+                      <FileText size={32} />
+                    </div>
+                  )}
+                  <h3 className="text-xl font-bold text-slate-900">{formData.companyName || 'Votre Entreprise'}</h3>
+                  <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
+                    {formData.companyAddress}<br/>
+                    {formData.companyEmail}<br/>
+                    {formData.companyPhone}
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <h1 className="text-4xl font-light text-slate-900 mb-2">FACTURE</h1>
+                  <p className="text-lg font-semibold text-primary-900">{formData.invoiceNumber}</p>
+                  <div className="mt-4 space-y-1 text-sm text-slate-600">
+                    <p><span className="font-medium">Date :</span> {new Date(formData.invoiceDate).toLocaleDateString()}</p>
+                    {formData.dueDate && <p><span className="font-medium">Échéance :</span> {new Date(formData.dueDate).toLocaleDateString()}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bill To */}
+              <div className="mb-12">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Facturé à</h4>
+                <div className="bg-slate-50 p-6 rounded-lg border border-slate-100 max-w-md">
+                   <h3 className="text-lg font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
+                   <div className="text-slate-600 text-sm mt-2 whitespace-pre-line">
+                     {formData.clientAddress}
+                   </div>
+                   <div className="text-slate-600 text-sm mt-4 space-y-1">
+                     <p className="flex items-center"><span className="w-4 h-4 mr-2 inline-block bg-slate-200 rounded-full"></span> {formData.clientEmail}</p>
+                     {formData.clientPhone && <p className="flex items-center"><span className="w-4 h-4 mr-2 inline-block bg-slate-200 rounded-full"></span> {formData.clientPhone}</p>}
+                   </div>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <div className="mb-10">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-1/2 text-left">Description</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Qté</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Prix Unit.</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {formData.items.map((item) => (
+                      <tr key={item.id}>
+                        <td className="py-4 text-slate-800 font-medium">{item.name}</td>
+                        <td className="py-4 text-slate-600 text-right">{item.quantity}</td>
+                        <td className="py-4 text-slate-600 text-right">{item.unitPrice.toFixed(2)} {currencySymbol}</td>
+                        <td className="py-4 text-slate-900 font-bold text-right">{(item.quantity * item.unitPrice).toFixed(2)} {currencySymbol}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Totals & Payment */}
+              <div className="flex flex-col md:flex-row justify-between items-start border-t border-slate-200 pt-8">
+                <div className="mb-8 md:mb-0 md:w-1/2">
+                   <h4 className="text-sm font-bold text-slate-900 mb-2">Informations de paiement</h4>
+                   <p className="text-sm text-slate-600">
+                     Méthode : <span className="font-medium text-slate-800">{formData.paymentMethod}</span><br/>
+                     Devise : {formData.currency}
+                   </p>
+                </div>
+
+                <div className="w-full md:w-1/3">
+                  <div className="flex justify-between py-2 text-slate-600">
+                    <span>Sous-total</span>
+                    <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+                  </div>
+                  <div className="flex justify-between py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4">
+                    <span>TVA (0%)</span>
+                    <span>0.00 {currencySymbol}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xl font-bold text-primary-900">
+                    <span>Total à payer</span>
+                    <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer text inside PDF */}
+              <div className="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
+                 <p>Merci de votre confiance. Facture générée automatiquement via FactuPro.</p>
+              </div>
+
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col lg:flex-row justify-center items-center gap-6 mb-12">
+            
+            {/* Bouton Modifier */}
+            <button
+              onClick={handleEdit}
+              disabled={loading}
+              className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-medium rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 transition-all duration-200 min-w-[160px]"
+            >
+              <Pencil className="mr-2 h-5 w-5" />
+              Modifier
+            </button>
+
+            {/* Bouton Générer PDF */}
+            <button
+              onClick={handleGeneratePdf}
+              disabled={loading}
+              className="inline-flex items-center justify-center px-8 py-3 border border-slate-300 shadow-sm text-base font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 hover:shadow-md transition-all duration-200 min-w-[200px]"
+            >
+              <Download className="-ml-1 mr-3 h-5 w-5" />
+              Générer PDF
+            </button>
+
+            {/* Bouton Envoyer la facture (Manda) */}
+            <div className="flex flex-col items-center">
+              <button
+                onClick={handleSendEmail}
+                disabled={loading}
+                className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="-ml-1 mr-3 h-5 w-5" />
+                    Envoyer la facture
+                  </>
+                )}
+              </button>
+              <span className="text-xs text-slate-400 mt-2 font-medium italic">(pour l'envoi d'email de Manda)</span>
+            </div>
+
+          </div>
+        </div>
+      ) : (
+        /* VIEW: FORM MODE */
+        <form onSubmit={handlePreviewSubmit} className="animate-fade-in space-y-8 bg-white shadow-xl rounded-2xl p-6 md:p-10 border border-slate-100">
+          
+          {/* Sections Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+            
+            {/* Entreprise */}
+            <div>
+              <h3 className={sectionTitleClass}>Informations Entreprise</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Nom de l'entreprise *</label>
+                  <input required type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Ma Société SAS" />
+                </div>
+                <div>
+                  <label className={labelClass}>Adresse *</label>
+                  <textarea required rows={2} name="companyAddress" value={formData.companyAddress} onChange={handleInputChange} className={inputClass} placeholder="123 Rue de l'Innovation..." />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Email *</label>
+                    <input required type="email" name="companyEmail" value={formData.companyEmail} onChange={handleInputChange} className={inputClass} placeholder="contact@masociete.com" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Téléphone</label>
+                    <input type="tel" name="companyPhone" value={formData.companyPhone} onChange={handleInputChange} className={inputClass} placeholder="01 23 45 67 89" />
+                  </div>
+                </div>
+                <div>
+                  <label className={labelClass}>Logo URL</label>
+                  <input type="url" name="logoUrl" value={formData.logoUrl} onChange={handleInputChange} className={inputClass} placeholder="https://example.com/logo.png" />
+                </div>
+              </div>
+            </div>
+
+            {/* Client */}
+            <div>
+              <h3 className={sectionTitleClass}>Informations Client</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Nom du client *</label>
+                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Client Important" />
+                </div>
+                <div>
+                  <label className={labelClass}>Adresse *</label>
+                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder="456 Boulevard du Succès..." />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Email *</label>
+                    <input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} className={inputClass} placeholder="email@client.com" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Téléphone</label>
+                    <input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} className={inputClass} placeholder="06 98 76 54 32" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Détails Facture */}
+          <div className="pt-4">
+            <h3 className={sectionTitleClass}>Détails de la Facture</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <label className={labelClass}>Numéro Facture *</label>
+                <input required type="text" name="invoiceNumber" value={formData.invoiceNumber} onChange={handleInputChange} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Date d'émission *</label>
+                <input required type="date" name="invoiceDate" value={formData.invoiceDate} onChange={handleInputChange} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Date d'échéance</label>
+                <input type="date" name="dueDate" value={formData.dueDate} onChange={handleInputChange} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Devise</label>
+                <select name="currency" value={formData.currency} onChange={handleInputChange} className={inputClass}>
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.code} - {c.symbol}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={labelClass}>Méthode de Paiement</label>
+                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className={inputClass}>
+                  {PAYMENT_METHODS.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Articles */}
+          <div className="pt-4">
+            <h3 className={sectionTitleClass}>Articles et Services</h3>
+            
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-slate-200">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-1/2">Description</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-24">Qté</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Prix Unit.</th>
+                    <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider w-32">Total</th>
+                    <th scope="col" className="relative px-3 py-3">
+                      <span className="sr-only">Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-slate-200">
+                  {formData.items.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <input 
+                          type="text" 
+                          required
+                          value={item.name} 
+                          onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                          placeholder="Nom de l'article"
+                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                        />
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <input 
+                          type="number" 
+                          min="1"
+                          required
+                          value={item.quantity} 
+                          onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value) || 0)}
+                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                        />
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <input 
+                          type="number" 
+                          min="0"
+                          step="0.01"
+                          required
+                          value={item.unitPrice} 
+                          onChange={(e) => handleItemChange(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                          className={`${inputClass} border-transparent focus:border-primary-500 hover:bg-slate-50`}
+                        />
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap text-sm text-slate-700 font-medium">
+                        {(item.quantity * item.unitPrice).toFixed(2)} {currencySymbol}
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button 
+                          type="button" 
+                          onClick={() => removeItem(item.id)}
+                          disabled={formData.items.length === 1}
+                          className={`text-slate-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50 ${formData.items.length === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button 
+              type="button" 
+              onClick={addItem}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-slate-300 shadow-sm text-sm font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+            >
+              <Plus size={16} className="mr-2" />
+              Ajouter une ligne
+            </button>
+          </div>
+
+          {/* Totaux */}
+          <div className="border-t border-slate-200 pt-6 flex justify-end">
+            <div className="w-full md:w-1/3 space-y-3">
+               <div className="flex justify-between items-center text-lg font-bold text-primary-900">
+                 <span>Total à payer</span>
+                 <span>{calculateTotal().toFixed(2)} {currencySymbol}</span>
+               </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="pt-6 border-t border-slate-200 flex justify-end">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              <FileText className="-ml-1 mr-3 h-5 w-5" />
+              Prévisualiser la facture
+            </button>
+          </div>
+
+        </form>
+      )}
+    </div>
+  );
+};
+
+export default InvoiceForm;
