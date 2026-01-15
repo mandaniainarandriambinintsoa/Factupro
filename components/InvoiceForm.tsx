@@ -1,9 +1,12 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail } from 'lucide-react';
+import { Plus, Trash2, Loader2, CheckCircle2, FileText, Download, Pencil, Mail, Save, LogIn } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import { InvoiceData, LineItem } from '../types';
 import { CURRENCIES, PAYMENT_METHODS, DEFAULT_WEBHOOK_URL } from '../constants';
 import { sendInvoiceWithPdfToWebhook } from '../services/invoiceService';
+import { saveInvoice } from '../services/historyService';
+import { useAuth } from '../contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 const getInitialFormData = (): InvoiceData => ({
   companyName: '',
@@ -28,11 +31,16 @@ const getInitialFormData = (): InvoiceData => ({
 const InvoiceForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [successAction, setSuccessAction] = useState<'pdf' | 'email' | null>(null);
+  const [successAction, setSuccessAction] = useState<'pdf' | 'email' | 'saved' | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [savingToHistory, setSavingToHistory] = useState(false);
+  const [lastGeneratedPdfBase64, setLastGeneratedPdfBase64] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<InvoiceData>(getInitialFormData());
-  
+
+  const { user } = useAuth();
+
   // Reference pour la zone à imprimer en PDF
   const invoiceRef = useRef<HTMLDivElement>(null);
 
@@ -207,12 +215,97 @@ const InvoiceForm: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Action: Sauvegarder dans l'historique
+  const handleSaveToHistory = async () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    if (!invoiceRef.current) return;
+
+    setSavingToHistory(true);
+
+    try {
+      let pdfBase64 = lastGeneratedPdfBase64;
+
+      // Générer le PDF si pas encore fait
+      if (!pdfBase64) {
+        const element = invoiceRef.current;
+        const opt = {
+          margin: 10,
+          filename: `Facture-${formData.invoiceNumber}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+
+        pdfBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(',')[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfBlob);
+        });
+
+        setLastGeneratedPdfBase64(pdfBase64);
+      }
+
+      const result = await saveInvoice(formData, pdfBase64);
+
+      if (result.error) {
+        console.error('Erreur lors de la sauvegarde:', result.error);
+        alert('Erreur lors de la sauvegarde: ' + result.error);
+      } else {
+        setSuccessAction('saved');
+        setSuccess(true);
+        setTimeout(() => {
+          setSuccess(false);
+          setSuccessAction(null);
+        }, 5000);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+    } finally {
+      setSavingToHistory(false);
+    }
+  };
+
   const inputClass = "block w-full rounded-md border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm py-2.5 px-3 bg-white border";
   const labelClass = "block text-sm font-medium text-slate-700 mb-1";
   const sectionTitleClass = "text-lg font-semibold text-primary-900 border-b border-slate-200 pb-2 mb-6";
   const currencySymbol = CURRENCIES.find(c => c.code === formData.currency)?.symbol || '';
 
   if (success) {
+    const getSuccessMessage = () => {
+      switch (successAction) {
+        case 'email':
+          return {
+            title: 'Facture envoyée !',
+            description: "Les données ont été transmises avec succès au système d'envoi d'email.",
+            buttonText: 'Créer une nouvelle facture'
+          };
+        case 'saved':
+          return {
+            title: 'Facture sauvegardée !',
+            description: "Votre facture a été sauvegardée dans votre historique. Vous pouvez y accéder depuis votre tableau de bord.",
+            buttonText: 'Retour'
+          };
+        default:
+          return {
+            title: 'Facture générée !',
+            description: "La fenêtre d'impression s'est ouverte. Sélectionnez 'Enregistrer au format PDF' pour sauvegarder votre document.",
+            buttonText: 'Retour'
+          };
+      }
+    };
+
+    const successMsg = getSuccessMessage();
+
     return (
       <div className="max-w-3xl mx-auto mt-12 p-8 bg-white rounded-2xl shadow-xl text-center border border-green-100 animate-fade-in">
         <div className="flex justify-center mb-6">
@@ -221,25 +314,19 @@ const InvoiceForm: React.FC = () => {
           </div>
         </div>
         <h2 className="text-3xl font-bold text-slate-800 mb-4">
-          {successAction === 'email' ? 'Facture envoyée !' : 'Facture générée !'}
+          {successMsg.title}
         </h2>
         <p className="text-slate-600 mb-8 text-lg">
-          {successAction === 'email' 
-            ? "Les données ont été transmises avec succès au système d'envoi d'email."
-            : "La fenêtre d'impression s'est ouverte. Sélectionnez 'Enregistrer au format PDF' pour sauvegarder votre document."}
+          {successMsg.description}
         </p>
-        <button 
+        <button
           onClick={() => {
             setSuccess(false);
             setSuccessAction(null);
-            if (successAction === 'pdf') {
-              // Si c'était juste un PDF, on reste peut-être sur l'aperçu, ou on reset. 
-              // Ici on laisse l'utilisateur revenir manuellement ou on reset si c'était un envoi email.
-            }
           }}
           className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-white bg-primary-900 hover:bg-primary-800 transition-colors"
         >
-          {successAction === 'email' ? 'Créer une nouvelle facture' : 'Retour'}
+          {successMsg.buttonText}
         </button>
       </div>
     );
@@ -373,12 +460,12 @@ const InvoiceForm: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col lg:flex-row justify-center items-center gap-6 mb-12">
-            
+          <div className="flex flex-col lg:flex-row justify-center items-center gap-4 mb-12 flex-wrap">
+
             {/* Bouton Modifier */}
             <button
               onClick={handleEdit}
-              disabled={loading}
+              disabled={loading || savingToHistory}
               className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-medium rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 transition-all duration-200 min-w-[160px]"
             >
               <Pencil className="mr-2 h-5 w-5" />
@@ -388,18 +475,42 @@ const InvoiceForm: React.FC = () => {
             {/* Bouton Générer PDF */}
             <button
               onClick={handleGeneratePdf}
-              disabled={loading}
-              className="inline-flex items-center justify-center px-8 py-3 border border-slate-300 shadow-sm text-base font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 hover:shadow-md transition-all duration-200 min-w-[200px]"
+              disabled={loading || savingToHistory}
+              className="inline-flex items-center justify-center px-6 py-3 border border-slate-300 shadow-sm text-base font-bold rounded-full text-slate-700 bg-white hover:bg-slate-50 hover:text-primary-900 hover:shadow-md transition-all duration-200 min-w-[160px]"
             >
-              <Download className="-ml-1 mr-3 h-5 w-5" />
+              <Download className="-ml-1 mr-2 h-5 w-5" />
               Générer PDF
             </button>
 
-            {/* Bouton Envoyer la facture (Manda) */}
+            {/* Bouton Sauvegarder dans l'historique */}
+            <button
+              onClick={handleSaveToHistory}
+              disabled={loading || savingToHistory}
+              className="inline-flex items-center justify-center px-6 py-3 border border-green-300 shadow-sm text-base font-bold rounded-full text-green-700 bg-green-50 hover:bg-green-100 hover:shadow-md transition-all duration-200 min-w-[200px]"
+            >
+              {savingToHistory ? (
+                <>
+                  <Loader2 className="animate-spin -ml-1 mr-2 h-5 w-5" />
+                  Sauvegarde...
+                </>
+              ) : user ? (
+                <>
+                  <Save className="-ml-1 mr-2 h-5 w-5" />
+                  Sauvegarder
+                </>
+              ) : (
+                <>
+                  <LogIn className="-ml-1 mr-2 h-5 w-5" />
+                  Connectez-vous
+                </>
+              )}
+            </button>
+
+            {/* Bouton Envoyer la facture */}
             <div className="flex flex-col items-center">
               <button
                 onClick={handleSendEmail}
-                disabled={loading}
+                disabled={loading || savingToHistory}
                 className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-full text-white bg-primary-900 shadow-lg hover:bg-primary-800 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-w-[200px]"
               >
                 {loading ? (
@@ -414,7 +525,7 @@ const InvoiceForm: React.FC = () => {
                   </>
                 )}
               </button>
-              <span className="text-xs text-slate-400 mt-2 font-medium italic">(pour l'envoi d'email de Manda)</span>
+              <span className="text-xs text-slate-400 mt-2 font-medium italic">(envoi par email)</span>
             </div>
 
           </div>
@@ -619,6 +730,13 @@ const InvoiceForm: React.FC = () => {
 
         </form>
       )}
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode="login"
+      />
     </div>
   );
 };
