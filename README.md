@@ -4,6 +4,8 @@
 
 FactuPro est une application web moderne de création de factures et devis, conçue pour les freelances et PME. Elle permet de générer des documents professionnels en PDF et de les envoyer automatiquement par email grâce à l'intégration avec des webhooks (n8n).
 
+![FactuPro Landing Page](docs/images/landing_page.PNG)
+
 ## Fonctionnalités
 
 - **Création de factures** : Interface intuitive pour créer des factures professionnelles
