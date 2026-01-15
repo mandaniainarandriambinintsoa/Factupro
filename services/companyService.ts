@@ -1,5 +1,17 @@
 import { supabase } from '../lib/supabase';
 import { Tables, TablesInsert, TablesUpdate } from '../lib/database.types';
+import {
+  validateEmail,
+  validatePhone,
+  validateRequired,
+  validateSiret,
+  validateVatNumber,
+  validateNif,
+  validateStat,
+  validateIban,
+  validateBic,
+  combineValidations,
+} from '../utils/validation';
 
 export type Company = Tables<'companies'>;
 export type CompanyInsert = Omit<TablesInsert<'companies'>, 'user_id'>;
@@ -82,6 +94,34 @@ export const createCompany = async (
 ): Promise<{ data: MappedCompany | null; error: string | null }> => {
   if (!supabase) {
     return { data: null, error: 'Supabase non configuré' };
+  }
+
+  // Validation des données
+  const validations = [
+    validateRequired(companyData.name, 'Nom de la société'),
+    validatePhone(companyData.phone || undefined),
+    validateIban(companyData.iban || undefined),
+    validateBic(companyData.bic || undefined),
+  ];
+
+  // Validation email si fourni
+  if (companyData.email) {
+    validations.push(validateEmail(companyData.email));
+  }
+
+  // Validation conditionnelle selon la région fiscale
+  if (companyData.fiscalRegion === 'EU') {
+    validations.push(validateSiret(companyData.siret || undefined));
+    validations.push(validateVatNumber(companyData.vatNumber || undefined));
+  } else if (companyData.fiscalRegion === 'MG') {
+    validations.push(validateNif(companyData.nif || undefined));
+    validations.push(validateStat(companyData.stat || undefined));
+  }
+
+  const validation = combineValidations(...validations);
+
+  if (!validation.isValid) {
+    return { data: null, error: validation.error || 'Données invalides' };
   }
 
   const { data: { user } } = await supabase.auth.getUser();

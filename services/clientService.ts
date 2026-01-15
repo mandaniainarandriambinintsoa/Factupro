@@ -1,5 +1,15 @@
 import { supabase } from '../lib/supabase';
 import { Tables, TablesInsert, TablesUpdate } from '../lib/database.types';
+import {
+  validateEmail,
+  validatePhone,
+  validateRequired,
+  validateSiret,
+  validateVatNumber,
+  validateNif,
+  validateStat,
+  combineValidations,
+} from '../utils/validation';
 
 export type Client = Tables<'clients'>;
 export type ClientInsert = Omit<TablesInsert<'clients'>, 'user_id'>;
@@ -49,6 +59,21 @@ export const createClient = async (
 ): Promise<{ data: MappedClient | null; error: string | null }> => {
   if (!supabase) {
     return { data: null, error: 'Supabase non configuré' };
+  }
+
+  // Validation des données
+  const validation = combineValidations(
+    validateRequired(clientData.name, 'Nom'),
+    validateEmail(clientData.email),
+    validatePhone(clientData.phone || undefined),
+    validateSiret(clientData.siret || undefined),
+    validateVatNumber(clientData.vat_number || undefined),
+    validateNif(clientData.nif || undefined),
+    validateStat(clientData.stat || undefined)
+  );
+
+  if (!validation.isValid) {
+    return { data: null, error: validation.error || 'Données invalides' };
   }
 
   const { data: { user } } = await supabase.auth.getUser();

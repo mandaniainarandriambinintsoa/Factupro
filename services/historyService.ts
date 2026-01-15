@@ -1,5 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { InvoiceData, QuoteData, SavedInvoice, SavedQuote, LineItem } from '../types';
+import { Tables } from '../lib/database.types';
+
+// Database row types
+type DbInvoice = Tables<'invoices'>;
+type DbQuote = Tables<'quotes'>;
 
 // Status types
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'cancelled';
@@ -303,55 +308,55 @@ export const getQuoteById = async (
 };
 
 // Map database invoice to frontend type
-const mapDbInvoice = (dbInvoice: any): SavedInvoice => ({
+const mapDbInvoice = (dbInvoice: DbInvoice): SavedInvoice => ({
   id: dbInvoice.id,
   userId: dbInvoice.user_id,
   invoiceNumber: dbInvoice.invoice_number,
   invoiceDate: dbInvoice.invoice_date,
-  dueDate: dbInvoice.due_date,
+  dueDate: dbInvoice.due_date || undefined,
   companyName: dbInvoice.company_name,
-  companyAddress: dbInvoice.company_address,
+  companyAddress: dbInvoice.company_address || undefined,
   companyEmail: dbInvoice.company_email,
-  companyPhone: dbInvoice.company_phone,
-  logoUrl: dbInvoice.logo_url,
+  companyPhone: dbInvoice.company_phone || undefined,
+  logoUrl: dbInvoice.logo_url || undefined,
   clientName: dbInvoice.client_name,
-  clientAddress: dbInvoice.client_address,
+  clientAddress: dbInvoice.client_address || undefined,
   clientEmail: dbInvoice.client_email,
-  clientPhone: dbInvoice.client_phone,
-  items: dbInvoice.items,
-  total: parseFloat(dbInvoice.total),
+  clientPhone: dbInvoice.client_phone || undefined,
+  items: dbInvoice.items as LineItem[],
+  total: dbInvoice.total,
   currency: dbInvoice.currency,
-  paymentMethod: dbInvoice.payment_method,
-  status: dbInvoice.status || 'draft',
-  notes: dbInvoice.notes,
-  pdfBase64: dbInvoice.pdf_base64,
-  createdAt: dbInvoice.created_at,
-  updatedAt: dbInvoice.updated_at,
+  paymentMethod: dbInvoice.payment_method || undefined,
+  status: (dbInvoice.status as InvoiceStatus) || 'draft',
+  notes: dbInvoice.notes || undefined,
+  pdfBase64: dbInvoice.pdf_base64 || undefined,
+  createdAt: dbInvoice.created_at || new Date().toISOString(),
+  updatedAt: dbInvoice.updated_at || new Date().toISOString(),
 });
 
 // Map database quote to frontend type
-const mapDbQuote = (dbQuote: any): SavedQuote => ({
+const mapDbQuote = (dbQuote: DbQuote): SavedQuote => ({
   id: dbQuote.id,
   userId: dbQuote.user_id,
   quoteNumber: dbQuote.quote_number,
   quoteDate: dbQuote.quote_date,
   validityDate: dbQuote.validity_date,
   companyName: dbQuote.company_name,
-  companyAddress: dbQuote.company_address,
+  companyAddress: dbQuote.company_address || undefined,
   companyEmail: dbQuote.company_email,
-  companyPhone: dbQuote.company_phone,
-  logoUrl: dbQuote.logo_url,
+  companyPhone: dbQuote.company_phone || undefined,
+  logoUrl: dbQuote.logo_url || undefined,
   clientName: dbQuote.client_name,
-  clientAddress: dbQuote.client_address,
+  clientAddress: dbQuote.client_address || undefined,
   clientEmail: dbQuote.client_email,
-  clientPhone: dbQuote.client_phone,
-  items: dbQuote.items,
-  total: parseFloat(dbQuote.total),
+  clientPhone: dbQuote.client_phone || undefined,
+  items: dbQuote.items as LineItem[],
+  total: dbQuote.total,
   currency: dbQuote.currency,
-  paymentMethod: dbQuote.payment_method,
-  status: dbQuote.status || 'draft',
-  notes: dbQuote.notes,
-  pdfBase64: dbQuote.pdf_base64,
-  createdAt: dbQuote.created_at,
-  updatedAt: dbQuote.updated_at,
+  paymentMethod: dbQuote.payment_method || undefined,
+  status: (dbQuote.status as QuoteStatus) || 'draft',
+  notes: dbQuote.notes || undefined,
+  pdfBase64: dbQuote.pdf_base64 || undefined,
+  createdAt: dbQuote.created_at || new Date().toISOString(),
+  updatedAt: dbQuote.updated_at || new Date().toISOString(),
 });
