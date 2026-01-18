@@ -39,7 +39,7 @@ Factumation est une application web moderne de creation de factures et devis, co
 ## Architecture du Projet
 
 ```
-Factupro/
+Factumation/
 ├── index.html              # Point d'entree HTML
 ├── index.tsx               # Point d'entree React
 ├── App.tsx                 # Composant principal avec routing
@@ -87,8 +87,8 @@ Factupro/
 
 ```bash
 # Cloner le repo
-git clone https://github.com/mandaniainarandriambinintsoa/Factupro.git
-cd Factupro
+git clone https://github.com/mandaniainarandriambinintsoa/Factumation.git
+cd Factumation
 
 # Installer les dependances
 npm install
