@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-slate-500 text-sm">
-            © {new Date().getFullYear()} FactuPro. Tous droits réservés.
+            © {new Date().getFullYear()} Factumation. Tous droits réservés.
           </div>
           
           <div className="flex space-x-6">

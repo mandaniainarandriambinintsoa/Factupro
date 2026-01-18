@@ -1,5 +1,5 @@
 /**
- * Utilitaires de validation pour FactuPro
+ * Utilitaires de validation pour Factumation
  */
 
 // Résultat de validation

@@ -1,10 +1,10 @@
-# FactuPro
+# Factumation
 
 **La facturation simplifiee pour les professionnels.**
 
-FactuPro est une application web moderne de creation de factures et devis, concue pour les freelances et PME. Elle permet de generer des documents professionnels en PDF et de les envoyer automatiquement par email.
+Factumation est une application web moderne de creation de factures et devis, concue pour les freelances et PME. Elle permet de generer des documents professionnels en PDF et de les envoyer automatiquement par email.
 
-![FactuPro Landing Page](docs/images/landing_page.PNG)
+![Factumation Landing Page](docs/images/landing_page.PNG)
 
 ## Fonctionnalites
 

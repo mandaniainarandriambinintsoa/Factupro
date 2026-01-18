@@ -1,5 +1,5 @@
-# robots.txt pour FactuPro
-# https://factupro.com
+# robots.txt pour Factumation
+# https://factumation.com
 
 User-agent: *
 Allow: /

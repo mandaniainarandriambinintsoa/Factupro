@@ -1,5 +1,5 @@
 -- =============================================
--- FACTUPRO - Database Schema
+-- FACTUMATION - Database Schema
 -- Execute this in Supabase SQL Editor
 -- =============================================
 

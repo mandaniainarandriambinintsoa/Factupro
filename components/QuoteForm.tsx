@@ -681,7 +681,7 @@ const QuoteForm: React.FC = () => {
               {/* Footer text inside PDF */}
               <div className="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
                  <p className="font-medium text-slate-500 mb-1">Devis valable jusqu'au {new Date(formData.validityDate).toLocaleDateString()}</p>
-                 <p>Merci de votre confiance. Devis généré automatiquement via FactuPro.</p>
+                 <p>Merci de votre confiance. Devis généré automatiquement via Factumation.</p>
               </div>
 
             </div>

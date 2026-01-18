@@ -61,7 +61,7 @@ const Navbar: React.FC = () => {
               <div className="bg-primary-900 text-white p-2 rounded-lg group-hover:scale-105 transition-transform duration-200">
                 <FileText size={24} />
               </div>
-              <span className="font-bold text-xl text-primary-900 tracking-tight">FactuPro</span>
+              <span className="font-bold text-xl text-primary-900 tracking-tight">Factumation</span>
             </Link>
 
             {/* Desktop Menu */}

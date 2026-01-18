@@ -709,7 +709,7 @@ const InvoiceForm: React.FC = () => {
 
               {/* Footer text inside PDF */}
               <div className="mt-12 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-                 <p>Merci de votre confiance. Facture générée automatiquement via FactuPro.</p>
+                 <p>Merci de votre confiance. Facture générée automatiquement via Factumation.</p>
               </div>
 
             </div>
