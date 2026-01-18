@@ -5,7 +5,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://factupro.com/sitemap.xml
+Sitemap: https://factupro-tan.vercel.app/sitemap.xml
 
 # Bloquer les ressources inutiles pour le crawl
 Disallow: /api/
