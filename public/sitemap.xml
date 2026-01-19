@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://factupro-tan.vercel.app/</loc>
+    <loc>https://factumation.vercel.app/</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://factupro-tan.vercel.app/#/create</loc>
+    <loc>https://factumation.vercel.app/#/create</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://factupro-tan.vercel.app/#/quote</loc>
+    <loc>https://factumation.vercel.app/#/quote</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://factupro-tan.vercel.app/#/about</loc>
+    <loc>https://factumation.vercel.app/#/about</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://factupro-tan.vercel.app/#/contact</loc>
+    <loc>https://factumation.vercel.app/#/contact</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://factupro-tan.vercel.app/#/dashboard</loc>
+    <loc>https://factumation.vercel.app/#/dashboard</loc>
     <lastmod>2026-01-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
