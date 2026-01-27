@@ -615,7 +615,7 @@ const InvoiceForm: React.FC = () => {
           {/* Invoice Paper Representation */}
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
             {/* Ce div avec la ref sera cloné. Il doit contenir tout le style nécessaire. */}
-            <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
+            <div ref={invoiceRef} className="bg-white p-4 text-slate-800">
               
               {/* Invoice Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">
@@ -666,7 +666,6 @@ const InvoiceForm: React.FC = () => {
 
                   {/* Client Info - sous le numéro de facture */}
                   <div className="mt-4 pt-3 border-t border-slate-100 text-left">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Facturé à</h4>
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
                       <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
