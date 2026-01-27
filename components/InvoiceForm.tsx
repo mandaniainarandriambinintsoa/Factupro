@@ -293,14 +293,14 @@ const InvoiceForm: React.FC = () => {
       element.style.width = '800px';
 
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
-          windowWidth: 900,
+          windowWidth: 1200,
         },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
@@ -346,10 +346,10 @@ const InvoiceForm: React.FC = () => {
       // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
       const opt = {
-        margin: 10,
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -404,10 +404,10 @@ const InvoiceForm: React.FC = () => {
       // Générer le PDF avec html2pdf
       const element = invoiceRef.current;
       const opt = {
-        margin: 10,
+        margin: [5, 5, 5, 5],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -615,7 +615,7 @@ const InvoiceForm: React.FC = () => {
           {/* Invoice Paper Representation */}
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
             {/* Ce div avec la ref sera cloné. Il doit contenir tout le style nécessaire. */}
-            <div ref={invoiceRef} className="bg-white p-4 text-slate-800">
+            <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
               
               {/* Invoice Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">

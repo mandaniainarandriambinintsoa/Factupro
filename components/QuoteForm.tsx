@@ -299,14 +299,14 @@ const QuoteForm: React.FC = () => {
       element.style.width = '800px';
 
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [5, 5, 5, 5],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
-          windowWidth: 900,
+          windowWidth: 1200,
         },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
@@ -350,10 +350,10 @@ const QuoteForm: React.FC = () => {
     try {
       const element = quoteRef.current;
       const opt = {
-        margin: 10,
+        margin: [5, 5, 5, 5],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -405,10 +405,10 @@ const QuoteForm: React.FC = () => {
       // Générer le PDF avec html2pdf
       const element = quoteRef.current;
       const opt = {
-        margin: 10,
+        margin: [5, 5, 5, 5],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
@@ -470,10 +470,10 @@ const QuoteForm: React.FC = () => {
       if (!pdfBase64) {
         const element = quoteRef.current;
         const opt = {
-          margin: 10,
+          margin: [5, 5, 5, 5],
           filename: `Devis-${formData.quoteNumber}.pdf`,
           image: { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
+          html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
           jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
         };
 
