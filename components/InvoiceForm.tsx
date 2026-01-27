@@ -753,16 +753,16 @@ const InvoiceForm: React.FC = () => {
                    </p>
                 </div>
 
-                <div className="w-full md:w-1/3">
-                  <div className="flex justify-between py-2 text-slate-600 whitespace-nowrap">
+                <div className="w-full md:w-2/5">
+                  <div className="flex justify-between gap-1 py-2 text-slate-600 whitespace-nowrap">
                     <span>Sous-total</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
-                  <div className="flex justify-between py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4 whitespace-nowrap">
+                  <div className="flex justify-between gap-1 py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4 whitespace-nowrap">
                     <span>TVA (0%)</span>
                     <span>0.00 {currencySymbol}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xl font-bold text-primary-900 whitespace-nowrap">
+                  <div className="flex justify-between gap-1 items-center text-xl font-bold text-primary-900 whitespace-nowrap">
                     <span>Total à payer</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
