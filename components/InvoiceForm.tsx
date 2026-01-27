@@ -648,7 +648,8 @@ const InvoiceForm: React.FC = () => {
             <div ref={invoiceRef} className="bg-white p-8 md:p-12 text-slate-800">
               
               {/* Invoice Header */}
-              <div className="flex flex-col md:flex-row justify-between items-start mb-12 border-b border-slate-100 pb-8">
+              <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">
+                {/* Entreprise (Émetteur) - Gauche */}
                 <div className="mb-6 md:mb-0">
                   {formData.logoUrl ? (
                     <img src={formData.logoUrl} alt="Logo Entreprise" className="h-16 w-auto object-contain mb-4" />
@@ -663,7 +664,7 @@ const InvoiceForm: React.FC = () => {
                     {formData.companyEmail}<br/>
                     {formData.companyPhone}
                   </div>
-                  {/* Informations fiscales */}
+                  {/* Informations fiscales entreprise */}
                   {formData.fiscalInfo && formData.fiscalInfo.region !== 'NONE' && (
                     <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
                       {formData.fiscalInfo.region === 'MG' && (
@@ -681,7 +682,8 @@ const InvoiceForm: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
+                {/* Facture + Client - Droite */}
                 <div className="text-right">
                   <h1 className="text-4xl font-light text-slate-900 mb-2">FACTURE</h1>
                   <p className="text-lg font-semibold text-primary-900">{formData.invoiceNumber}</p>
@@ -689,21 +691,38 @@ const InvoiceForm: React.FC = () => {
                     <p><span className="font-medium">Date :</span> {new Date(formData.invoiceDate).toLocaleDateString()}</p>
                     {formData.dueDate && <p><span className="font-medium">Échéance :</span> {new Date(formData.dueDate).toLocaleDateString()}</p>}
                   </div>
-                </div>
-              </div>
 
-              {/* Bill To */}
-              <div className="mb-12">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Facturé à</h4>
-                <div className="bg-slate-50 p-6 rounded-lg border border-slate-100 max-w-md">
-                   <h3 className="text-lg font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
-                   <div className="text-slate-600 text-sm mt-2 whitespace-pre-line">
-                     {formData.clientAddress}
-                   </div>
-                   <div className="text-slate-600 text-sm mt-4 space-y-1">
-                     <p className="flex items-center"><span className="w-4 h-4 mr-2 inline-block bg-slate-200 rounded-full"></span> {formData.clientEmail}</p>
-                     {formData.clientPhone && <p className="flex items-center"><span className="w-4 h-4 mr-2 inline-block bg-slate-200 rounded-full"></span> {formData.clientPhone}</p>}
-                   </div>
+                  {/* Client Info - sous le numéro de facture */}
+                  <div className="mt-6 pt-4 border-t border-slate-100 text-left">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Facturé à</h4>
+                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                      <h3 className="text-base font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
+                      <div className="text-slate-600 text-sm mt-1 whitespace-pre-line">
+                        {formData.clientAddress}
+                      </div>
+                      <div className="text-slate-600 text-sm mt-2 space-y-0.5">
+                        <p>{formData.clientEmail}</p>
+                        {formData.clientPhone && <p>{formData.clientPhone}</p>}
+                      </div>
+                      {/* Informations fiscales client */}
+                      {formData.clientFiscalInfo && formData.clientFiscalInfo.region !== 'NONE' && (
+                        <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-600">
+                          {formData.clientFiscalInfo.region === 'MG' && (
+                            <>
+                              {formData.clientFiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formatNif(formData.clientFiscalInfo.nif)}</p>}
+                              {formData.clientFiscalInfo.stat && <p><span className="font-medium">STAT :</span> {formatStat(formData.clientFiscalInfo.stat)}</p>}
+                            </>
+                          )}
+                          {formData.clientFiscalInfo.region === 'EU' && (
+                            <>
+                              {formData.clientFiscalInfo.siret && <p><span className="font-medium">SIRET :</span> {formData.clientFiscalInfo.siret}</p>}
+                              {formData.clientFiscalInfo.tvaNumber && <p><span className="font-medium">TVA :</span> {formData.clientFiscalInfo.tvaNumber}</p>}
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 

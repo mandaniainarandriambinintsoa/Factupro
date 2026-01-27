@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, User, Building2, Mail, Phone, MapPin, X, Check, Loader2, FileText } from 'lucide-react';
-import { getClients, createClient, MappedClient } from '../services/clientService';
+import { Search, Plus, User, Building2, Mail, Phone, MapPin, X, Check, Loader2, FileText, Trash2 } from 'lucide-react';
+import { getClients, createClient, deleteClient, MappedClient } from '../services/clientService';
 import { useAuth } from '../contexts/AuthContext';
 import { FISCAL_REGIONS } from '../constants';
 
@@ -157,6 +157,19 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
     setSavingClient(false);
   };
 
+  const handleDeleteClient = async (e: React.MouseEvent, clientId: string) => {
+    e.stopPropagation(); // Empêcher la sélection du client
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) return;
+
+    const { error } = await deleteClient(clientId);
+    if (error) {
+      alert('Erreur lors de la suppression: ' + error);
+      return;
+    }
+    // Retirer le client de la liste
+    setClients(prev => prev.filter(c => c.id !== clientId));
+  };
+
   // Si l'utilisateur n'est pas connecté, ne pas afficher le sélecteur
   if (!user) {
     return null;
@@ -216,43 +229,56 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
                 ) : (
                   <div className="py-1">
                     {filteredClients.map((client) => (
-                      <button
+                      <div
                         key={client.id}
-                        type="button"
-                        onClick={() => handleSelectClient(client)}
-                        className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-colors flex items-start gap-3 ${
+                        className={`w-full px-4 py-3 hover:bg-slate-50 transition-colors flex items-start gap-3 ${
                           currentClientEmail === client.email ? 'bg-primary-50' : ''
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
-                          <User className="w-5 h-5 text-slate-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-slate-900 truncate">{client.name}</p>
-                            {currentClientEmail === client.email && (
-                              <Check className="w-4 h-4 text-primary-600 flex-shrink-0" />
+                        <button
+                          type="button"
+                          onClick={() => handleSelectClient(client)}
+                          className="flex items-start gap-3 flex-1 text-left"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                            <User className="w-5 h-5 text-slate-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-slate-900 truncate">{client.name}</p>
+                              {currentClientEmail === client.email && (
+                                <Check className="w-4 h-4 text-primary-600 flex-shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-500 truncate">{client.email}</p>
+                            {client.companyName && (
+                              <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                <Building2 className="w-3 h-3" />
+                                {client.companyName}
+                              </p>
+                            )}
+                            {/* Afficher les infos fiscales si disponibles */}
+                            {client.fiscalRegion && client.fiscalRegion !== 'NONE' && (
+                              <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                <FileText className="w-3 h-3" />
+                                {client.fiscalRegion === 'EU' && client.siret && `SIRET: ${client.siret}`}
+                                {client.fiscalRegion === 'EU' && client.vatNumber && ` | TVA: ${client.vatNumber}`}
+                                {client.fiscalRegion === 'MG' && client.nif && `NIF: ${client.nif}`}
+                                {client.fiscalRegion === 'MG' && client.stat && ` | STAT: ${client.stat}`}
+                              </p>
                             )}
                           </div>
-                          <p className="text-sm text-slate-500 truncate">{client.email}</p>
-                          {client.companyName && (
-                            <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                              <Building2 className="w-3 h-3" />
-                              {client.companyName}
-                            </p>
-                          )}
-                          {/* Afficher les infos fiscales si disponibles */}
-                          {client.fiscalRegion && client.fiscalRegion !== 'NONE' && (
-                            <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                              <FileText className="w-3 h-3" />
-                              {client.fiscalRegion === 'EU' && client.siret && `SIRET: ${client.siret}`}
-                              {client.fiscalRegion === 'EU' && client.vatNumber && ` | TVA: ${client.vatNumber}`}
-                              {client.fiscalRegion === 'MG' && client.nif && `NIF: ${client.nif}`}
-                              {client.fiscalRegion === 'MG' && client.stat && ` | STAT: ${client.stat}`}
-                            </p>
-                          )}
-                        </div>
-                      </button>
+                        </button>
+                        {/* Bouton supprimer */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteClient(e, client.id)}
+                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors flex-shrink-0"
+                          title="Supprimer ce client"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
