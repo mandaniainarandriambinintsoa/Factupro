@@ -287,21 +287,29 @@ const InvoiceForm: React.FC = () => {
 
     try {
       const element = invoiceRef.current;
+
+      // Forcer une largeur fixe temporairement pour le PDF
+      const originalWidth = element.style.width;
+      element.style.width = '800px';
+
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [10, 10, 10, 10],
         filename: `Facture-${formData.invoiceNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
-          width: 794,
+          windowWidth: 900,
         },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const }
       };
 
       // Générer et télécharger le PDF
       await (await loadHtml2Pdf())().set(opt).from(element).save();
+
+      // Restaurer la largeur originale
+      element.style.width = originalWidth;
 
       setSuccessAction('pdf');
       setSuccess(true);
