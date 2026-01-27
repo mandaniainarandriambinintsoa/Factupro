@@ -28,6 +28,7 @@ export interface InvoiceData {
   clientAddress: string;
   clientEmail: string;
   clientPhone?: string;
+  clientFiscalInfo?: FiscalInfo;
 
   // Invoice Details
   invoiceNumber: string;
@@ -54,6 +55,7 @@ export interface QuoteData {
   clientAddress: string;
   clientEmail: string;
   clientPhone?: string;
+  clientFiscalInfo?: FiscalInfo;
 
   // Quote Details
   quoteNumber: string;

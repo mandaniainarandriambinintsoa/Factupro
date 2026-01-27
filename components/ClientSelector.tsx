@@ -10,6 +10,11 @@ interface ClientSelectorProps {
     clientEmail: string;
     clientAddress: string;
     clientPhone: string;
+    fiscalRegion?: string;
+    siret?: string;
+    vatNumber?: string;
+    nif?: string;
+    stat?: string;
   }) => void;
   currentClientEmail?: string;
 }
@@ -92,6 +97,11 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
       clientEmail: client.email,
       clientAddress: client.address || '',
       clientPhone: client.phone || '',
+      fiscalRegion: client.fiscalRegion,
+      siret: client.siret,
+      vatNumber: client.vatNumber,
+      nif: client.nif,
+      stat: client.stat,
     });
     setIsOpen(false);
     setSearchQuery('');
@@ -131,6 +141,11 @@ const ClientSelector: React.FC<ClientSelectorProps> = ({ onSelectClient, current
         clientEmail: data.email,
         clientAddress: data.address || '',
         clientPhone: data.phone || '',
+        fiscalRegion: data.fiscalRegion,
+        siret: data.siret,
+        vatNumber: data.vatNumber,
+        nif: data.nif,
+        stat: data.stat,
       });
 
       // Réinitialiser le formulaire

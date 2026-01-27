@@ -40,6 +40,13 @@ const getInitialFormData = (): QuoteData => {
     clientAddress: '',
     clientEmail: '',
     clientPhone: '',
+    clientFiscalInfo: {
+      region: 'NONE',
+      nif: '',
+      stat: '',
+      siret: '',
+      tvaNumber: ''
+    },
     quoteNumber: `DEV-${new Date().getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
     quoteDate: today.toISOString().split('T')[0],
     validityDate: validityDate.toISOString().split('T')[0],
@@ -132,6 +139,11 @@ const QuoteForm: React.FC = () => {
     clientEmail: string;
     clientAddress: string;
     clientPhone: string;
+    fiscalRegion?: string;
+    siret?: string;
+    vatNumber?: string;
+    nif?: string;
+    stat?: string;
   }) => {
     setFormData(prev => ({
       ...prev,
@@ -139,6 +151,13 @@ const QuoteForm: React.FC = () => {
       clientEmail: client.clientEmail,
       clientAddress: client.clientAddress,
       clientPhone: client.clientPhone,
+      clientFiscalInfo: {
+        region: client.fiscalRegion || 'NONE',
+        siret: client.siret || '',
+        tvaNumber: client.vatNumber || '',
+        nif: client.nif || '',
+        stat: client.stat || '',
+      },
     }));
   };
 
@@ -195,7 +214,18 @@ const QuoteForm: React.FC = () => {
     }));
   };
 
+  const handleClientFiscalInfoChange = (field: keyof FiscalInfo, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      clientFiscalInfo: {
+        ...prev.clientFiscalInfo!,
+        [field]: value
+      }
+    }));
+  };
+
   const selectedFiscalRegion = FISCAL_REGIONS.find(r => r.code === formData.fiscalInfo?.region);
+  const selectedClientFiscalRegion = FISCAL_REGIONS.find(r => r.code === formData.clientFiscalInfo?.region);
 
   const handleItemChange = (id: string, field: keyof LineItem, value: string | number) => {
     const newItems = formData.items.map(item => {
@@ -790,10 +820,76 @@ const QuoteForm: React.FC = () => {
           {/* Sections Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
 
-            {/* Entreprise */}
+            {/* Client - À GAUCHE */}
             <div>
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <h3 className={sectionTitleClass + " !mb-0"}>Informations Entreprise</h3>
+                <h3 className={sectionTitleClass + " !mb-0"}>Informations Client</h3>
+                <ClientSelector
+                  onSelectClient={handleSelectClient}
+                  currentClientEmail={formData.clientEmail}
+                />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Nom du client *</label>
+                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Client Important" />
+                </div>
+                <div>
+                  <label className={labelClass}>Adresse *</label>
+                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder="456 Boulevard du Succès..." />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelClass}>Email *</label>
+                    <input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} className={inputClass} placeholder="email@client.com" />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Téléphone</label>
+                    <input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} className={inputClass} placeholder="06 98 76 54 32" />
+                  </div>
+                </div>
+
+                {/* Type de société client */}
+                <div className="pt-4 border-t border-slate-100">
+                  <label className={labelClass}>Type de société</label>
+                  <select
+                    value={formData.clientFiscalInfo?.region || 'NONE'}
+                    onChange={(e) => handleClientFiscalInfoChange('region', e.target.value)}
+                    className={inputClass}
+                  >
+                    {FISCAL_REGIONS.map(region => (
+                      <option key={region.code} value={region.code}>{region.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Champs fiscaux conditionnels client */}
+                {selectedClientFiscalRegion && selectedClientFiscalRegion.fields.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    {selectedClientFiscalRegion.fields.map(field => (
+                      <div key={field.key}>
+                        <label className={labelClass}>{field.label}</label>
+                        <input
+                          type="text"
+                          value={(formData.clientFiscalInfo as any)?.[field.key] || ''}
+                          onChange={(e) => handleClientFiscalInfoChange(field.key as keyof FiscalInfo, e.target.value)}
+                          className={inputClass}
+                          placeholder={field.placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Entreprise (Émetteur) - À DROITE */}
+            <div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <div>
+                  <h3 className={sectionTitleClass + " !mb-0"}>Informations Entreprise</h3>
+                  <span className="text-xs text-slate-500 italic">Émetteur du devis</span>
+                </div>
                 <CompanySelector
                   onSelectCompany={handleSelectCompany}
                   currentCompanyName={formData.companyName}
@@ -854,37 +950,6 @@ const QuoteForm: React.FC = () => {
                     ))}
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Client */}
-            <div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-                <h3 className={sectionTitleClass + " !mb-0"}>Informations Client</h3>
-                <ClientSelector
-                  onSelectClient={handleSelectClient}
-                  currentClientEmail={formData.clientEmail}
-                />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>Nom du client *</label>
-                  <input required type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} className={inputClass} placeholder="Ex: Client Important" />
-                </div>
-                <div>
-                  <label className={labelClass}>Adresse *</label>
-                  <textarea required rows={2} name="clientAddress" value={formData.clientAddress} onChange={handleInputChange} className={inputClass} placeholder="456 Boulevard du Succès..." />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className={labelClass}>Email *</label>
-                    <input required type="email" name="clientEmail" value={formData.clientEmail} onChange={handleInputChange} className={inputClass} placeholder="email@client.com" />
-                  </div>
-                  <div>
-                    <label className={labelClass}>Téléphone</label>
-                    <input type="tel" name="clientPhone" value={formData.clientPhone} onChange={handleInputChange} className={inputClass} placeholder="06 98 76 54 32" />
-                  </div>
-                </div>
               </div>
             </div>
           </div>
