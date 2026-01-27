@@ -254,10 +254,13 @@ const InvoiceForm: React.FC = () => {
     return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
   };
 
-  // Formater NIF: ex "10000221111" -> "10 000 221 111"
+  // Formater NIF: ex "4019532272" -> "40 195 32 272" (format 2-3-2-3)
   const formatNif = (nif: string): string => {
     const digits = nif.replace(/\s/g, '');
-    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    if (digits.length >= 10) {
+      return `${digits.slice(0,2)} ${digits.slice(2,5)} ${digits.slice(5,7)} ${digits.slice(7,10)}`;
+    }
+    return digits;
   };
 
   // Formater STAT: ex "2410111200010023" -> "24101 11 2000 0 10023"
