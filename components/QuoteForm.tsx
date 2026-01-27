@@ -299,7 +299,7 @@ const QuoteForm: React.FC = () => {
       element.style.width = '800px';
 
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [3, 3, 3, 3],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: {
@@ -350,7 +350,7 @@ const QuoteForm: React.FC = () => {
     try {
       const element = quoteRef.current;
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [3, 3, 3, 3],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -405,7 +405,7 @@ const QuoteForm: React.FC = () => {
       // Générer le PDF avec html2pdf
       const element = quoteRef.current;
       const opt = {
-        margin: [5, 5, 5, 5],
+        margin: [3, 3, 3, 3],
         filename: `Devis-${formData.quoteNumber}.pdf`,
         image: { type: 'jpeg' as const, quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, windowWidth: 1200 },
@@ -591,7 +591,7 @@ const QuoteForm: React.FC = () => {
       {isPreviewMode ? (
         <div className="animate-fade-in">
           <div className="bg-white shadow-2xl rounded-lg border border-slate-200 overflow-hidden mb-8">
-            <div ref={quoteRef} className="bg-white p-8 md:p-12 text-slate-800">
+            <div ref={quoteRef} className="bg-white p-6 text-slate-800">
 
               {/* Quote Header */}
               <div className="flex flex-col md:flex-row justify-between items-start mb-8 border-b border-slate-100 pb-8">
@@ -677,10 +677,10 @@ const QuoteForm: React.FC = () => {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-1/2 text-left">Description</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Qté</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Prix Unit.</th>
-                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider text-right">Total</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[35%] text-left">Description</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[10%] text-right">Qté</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[25%] text-right">Prix Unit.</th>
+                      <th className="py-3 text-sm font-semibold text-slate-500 uppercase tracking-wider w-[30%] text-right">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -688,8 +688,8 @@ const QuoteForm: React.FC = () => {
                       <tr key={item.id}>
                         <td className="py-4 text-slate-800 font-medium">{item.name}</td>
                         <td className="py-4 text-slate-600 text-right">{item.quantity}</td>
-                        <td className="py-4 text-slate-600 text-right">{formatNumber(item.unitPrice)} {currencySymbol}</td>
-                        <td className="py-4 text-slate-900 font-bold text-right">{formatNumber(item.quantity * item.unitPrice)} {currencySymbol}</td>
+                        <td className="py-4 text-slate-600 text-right whitespace-nowrap">{formatNumber(item.unitPrice)} {currencySymbol}</td>
+                        <td className="py-4 text-slate-900 font-bold text-right whitespace-nowrap">{formatNumber(item.quantity * item.unitPrice)} {currencySymbol}</td>
                       </tr>
                     ))}
                   </tbody>
