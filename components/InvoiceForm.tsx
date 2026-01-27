@@ -695,18 +695,16 @@ const InvoiceForm: React.FC = () => {
                   {/* Client Info - sous le numéro de facture */}
                   <div className="mt-6 pt-4 border-t border-slate-100 text-left">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Facturé à</h4>
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                      <h3 className="text-base font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
-                      <div className="text-slate-600 text-sm mt-1 whitespace-pre-line">
-                        {formData.clientAddress}
-                      </div>
-                      <div className="text-slate-600 text-sm mt-2 space-y-0.5">
-                        <p>{formData.clientEmail}</p>
-                        {formData.clientPhone && <p>{formData.clientPhone}</p>}
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
+                      <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
+                        {formData.clientAddress}<br/>
+                        {formData.clientEmail}<br/>
+                        {formData.clientPhone}
                       </div>
                       {/* Informations fiscales client */}
                       {formData.clientFiscalInfo && formData.clientFiscalInfo.region !== 'NONE' && (
-                        <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-600">
+                        <div className="mt-3 pt-3 border-t border-slate-100 text-sm text-slate-600">
                           {formData.clientFiscalInfo.region === 'MG' && (
                             <>
                               {formData.clientFiscalInfo.nif && <p><span className="font-medium">NIF :</span> {formatNif(formData.clientFiscalInfo.nif)}</p>}
