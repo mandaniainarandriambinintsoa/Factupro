@@ -685,16 +685,16 @@ const InvoiceForm: React.FC = () => {
 
                 {/* Facture + Client - Droite */}
                 <div className="text-right">
-                  <h1 className="text-4xl font-light text-slate-900 mb-2">FACTURE</h1>
+                  <h1 className="text-4xl font-light text-slate-900 mb-1">FACTURE</h1>
                   <p className="text-lg font-semibold text-primary-900">{formData.invoiceNumber}</p>
-                  <div className="mt-4 space-y-1 text-sm text-slate-600">
+                  <div className="mt-1 space-y-0.5 text-sm text-slate-600">
                     <p><span className="font-medium">Date :</span> {new Date(formData.invoiceDate).toLocaleDateString()}</p>
                     {formData.dueDate && <p><span className="font-medium">Échéance :</span> {new Date(formData.dueDate).toLocaleDateString()}</p>}
                   </div>
 
                   {/* Client Info - sous le numéro de facture */}
-                  <div className="mt-6 pt-4 border-t border-slate-100 text-left">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Facturé à</h4>
+                  <div className="mt-4 pt-3 border-t border-slate-100 text-left">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Facturé à</h4>
                     <div>
                       <h3 className="text-xl font-bold text-slate-900">{formData.clientName || 'Nom du Client'}</h3>
                       <div className="text-slate-500 text-sm mt-2 whitespace-pre-line leading-relaxed">
