@@ -626,11 +626,9 @@ const QuoteForm: React.FC = () => {
                     <h1 className="text-3xl font-light text-slate-900">DEVIS</h1>
                     <p className="text-lg font-semibold text-primary-900">{formData.quoteNumber}</p>
                   </div>
-                  <div className="mt-1 text-sm text-slate-600">
-                    <p>
-                      <span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}
-                      <span className="ml-4"><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</span>
-                    </p>
+                  <div className="mt-1 text-sm text-slate-600 whitespace-nowrap">
+                    <span className="font-medium">Date :</span> {new Date(formData.quoteDate).toLocaleDateString()}
+                    <span className="ml-4"><span className="font-medium">Valide jusqu'au :</span> {new Date(formData.validityDate).toLocaleDateString()}</span>
                   </div>
 
                   {/* Client Info - sous le numéro de devis */}
@@ -700,15 +698,15 @@ const QuoteForm: React.FC = () => {
                 </div>
 
                 <div className="w-full md:w-1/3">
-                  <div className="flex justify-between py-2 text-slate-600">
+                  <div className="flex justify-between py-2 text-slate-600 whitespace-nowrap">
                     <span>Sous-total</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
-                  <div className="flex justify-between py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4">
+                  <div className="flex justify-between py-2 text-slate-600 border-b border-slate-100 pb-4 mb-4 whitespace-nowrap">
                     <span>TVA (0%)</span>
                     <span>0.00 {currencySymbol}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xl font-bold text-primary-900">
+                  <div className="flex justify-between items-center text-xl font-bold text-primary-900 whitespace-nowrap">
                     <span>Total</span>
                     <span>{formatNumber(calculateTotal())} {currencySymbol}</span>
                   </div>
